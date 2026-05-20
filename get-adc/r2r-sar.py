@@ -1,40 +1,25 @@
-import RPi.GPIO as GPIO
 import time
+from r2r_adc import R2R_ADC
+import adc_plot
 
-class R2R_ADC:
-    def __init__(self, dynamic_range, compare_time=0.01, verbose=False):
-        self.dynamic_range = dynamic_range
-        self.verbose = verbose
-        self.compare_time = compare_time
-        
-        self.bits_gpio = [26, 20, 19, 16, 13, 12, 25, 11]
-        self.comp_gpio = 21
+voltage_values = []
+time_values = []
+duration = 3.0
 
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.bits_gpio, GPIO.OUT, initial=0)
-        GPIO.setup(self.comp_gpio, GPIO.IN)
+try:
+    adc = R2R_ADC(3.3, compare_time=0.0001, verbose=False)
     
-    def deinit(self):
-        GPIO.output(self.bits_gpio, 0)
-        GPIO.cleanup()
+    start_time = time.time()
     
-    def number_to_dac(self, number):
-        binary = [int(bit) for bit in bin(number)[2:].zfill(8)]
-        for i in range(8):
-            GPIO.output(self.bits_gpio[i], binary[i])
+    while (time.time() - start_time) < duration:
+        voltage = adc.get_sc_voltage()
+        voltage_values.append(voltage)
+        time_values.append(time.time() - start_time)
     
-    def sequential_counting_adc(self):
-        for number in range(256):
-            self.number_to_dac(number)
-            time.sleep(self.compare_time)
-            
-            if GPIO.input(self.comp_gpio) == GPIO.HIGH:
-                return number
-        return 255
+    adc_plot.plot_voltage_vs_time(time_values, voltage_values, 3.3)
     
-    def get_sc_voltage(self):
-        value = self.sequential_counting_adc()
-        voltage = (value / 256) * self.dynamic_range
+finally:
+    adc.deinit()        voltage = (value / 256) * self.dynamic_range
         if self.verbose:
             print(f"Напряжение: {voltage:.3f}В")
         return voltage
