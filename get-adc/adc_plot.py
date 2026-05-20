@@ -14,17 +14,4 @@ def plot_voltage_vs_time(time, voltage, max_voltage):
     plt.grid(True, alpha=0.3, linestyle="--")
     
     plt.tight_layout()
-    plt.show()        voltage = (value / 256) * self.dynamic_range
-        if self.verbose:
-            print(f"Напряжение: {voltage:.3f}В")
-        return voltage
-
-if __name__ == "__main__":
-    try:
-        adc = R2R_ADC(3.3, verbose=True)
-        
-        while True:
-            adc.get_sc_voltage()
-            time.sleep(0.5)
-    finally:
-        adc.deinit()
+    plt.show()
