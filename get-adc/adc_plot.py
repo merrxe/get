@@ -15,3 +15,21 @@ def plot_voltage_vs_time(time, voltage, max_voltage):
     
     plt.tight_layout()
     plt.show()
+
+def plot_sampling_period_hist(time):
+    sampling_periods = []
+    sampling_periods.append(time[0])
+    for i in range(1, len(time)):
+        sampling_periods.append(time[i] - time[i-1])
+    
+    plt.figure(figsize=(10,6))
+    plt.hist(sampling_periods, bins=20, edgecolor='black')
+    
+    plt.title("Распределение периода измерений", fontsize=16, fontweight="bold")
+    plt.xlabel("Период измерения, с", fontsize=12)
+    plt.ylabel("Количество измерений", fontsize=12)
+    
+    plt.grid(True, alpha=0.3, linestyle="--")
+    
+    plt.tight_layout()
+    plt.show()
