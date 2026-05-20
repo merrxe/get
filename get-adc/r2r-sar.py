@@ -19,25 +19,4 @@ try:
     adc_plot.plot_voltage_vs_time(time_values, voltage_values, 3.3)
     
 finally:
-    adc.deinit()        voltage = (value / 256) * self.dynamic_range
-        if self.verbose:
-            print(f"Напряжение: {voltage:.3f}В")
-        return voltage
-    
-    def successive_approximation_adc(self):
-        result = 0
-        for bit in range(7, -1, -1):
-            test_value = result | (1 << bit)
-            self.number_to_dac(test_value)
-            time.sleep(self.compare_time)
-            
-            if GPIO.input(self.comp_gpio) == GPIO.HIGH:
-                result = test_value
-        return result
-    
-    def get_sar_voltage(self):
-        value = self.successive_approximation_adc()
-        voltage = (value / 256) * self.dynamic_range
-        if self.verbose:
-            print(f"Напряжение: {voltage:.3f}В")
-        return voltage
+    adc.deinit()
