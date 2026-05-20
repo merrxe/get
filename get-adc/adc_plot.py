@@ -1,35 +1,35 @@
+import time
 import matplotlib.pyplot as plt
+from r2r_adc import R2R_ADC
 
-def plot_voltage_vs_time(time, voltage, max_voltage):
+voltage_values = []
+time_values = []
+duration = 3.0
+
+try:
+    adc = R2R_ADC(3.3, compare_time=0.0001, verbose=False)
+    
+    start_time = time.time()
+    
+    while (time.time() - start_time) < duration:
+        voltage = adc.get_sar_voltage()
+        voltage_values.append(voltage)
+        time_values.append(time.time() - start_time)
+    
     plt.figure(figsize=(10,6))
-    plt.plot(time, voltage)
+    plt.plot(time_values, voltage_values)
     
     plt.title("Зависимость напряжения от времени", fontsize=16, fontweight="bold")
     plt.xlabel("Время, с", fontsize=12)
     plt.ylabel("Напряжение, В", fontsize=12)
     
-    plt.xlim(0, max(time) + 1)
-    plt.ylim(0, max_voltage)
+    plt.xlim(0, max(time_values) + 1)
+    plt.ylim(0, 3.3)
     
     plt.grid(True, alpha=0.3, linestyle="--")
     
     plt.tight_layout()
     plt.show()
-
-def plot_sampling_period_hist(time):
-    sampling_periods = []
-    sampling_periods.append(time[0])
-    for i in range(1, len(time)):
-        sampling_periods.append(time[i] - time[i-1])
     
-    plt.figure(figsize=(10,6))
-    plt.hist(sampling_periods, bins=20, edgecolor='black')
-    
-    plt.title("Распределение периода измерений", fontsize=16, fontweight="bold")
-    plt.xlabel("Период измерения, с", fontsize=12)
-    plt.ylabel("Количество измерений", fontsize=12)
-    
-    plt.grid(True, alpha=0.3, linestyle="--")
-    
-    plt.tight_layout()
-    plt.show()
+finally:
+    adc.deinit()
