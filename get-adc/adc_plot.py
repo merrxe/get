@@ -1,36 +1,50 @@
-import matplotlib.pyplot as plt
+import RPi.GPIO as GPIO
+import time
 
-def plot_voltage_vs_time(time, voltage, max_voltage):
-    plt.figure(figsize= (10,6))
-    plt.plot(time, voltage)
+class R2R_ADC:
+    def __init__(self, dynamic_range, compare_time=0.01, verbose=False):
+        self.dynamic_range = dynamic_range
+        self.verbose = verbose
+        self.compare_time = compare_time
+        
+        self.bits_gpio = [26, 20, 19, 16, 13, 12, 25, 11]
+        self.comp_gpio = 21
 
-    plt.title("Зависимость напряжения от времени", fontsize = 16, fontweight = "bold")
-    plt.xlabel("Время, с", fontsize = 12)
-    plt.ylabel("Напряжение, В", fontsize = 12)
-
-    plt.xlim(0, max(time) + 1)
-    plt.ylim(0, max(voltage))
-
-    plt.grid(True, alpha = 0.3, linestyle = "--")
-
-    plt.tight_layout()
-    plt.show()
-
-def plot_sampling_period_hist(time):
-    sampling_periods = []
-
-    sampling_periods.append(time[0])
-    for i in range(1, len(time)):
-        sampling_periods.append(time[i] - time[i-1])
-
-    # print(sampling_periods)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.bits_gpio, GPIO.OUT, initial=0)
+        GPIO.setup(self.comp_gpio, GPIO.IN)
     
-    plt.figure(figsize= (10,6))
-    plt.hist(sampling_periods)
+    def deinit(self):
+        GPIO.output(self.bits_gpio, 0)
+        GPIO.cleanup()
+    
+    def number_to_dac(self, number):
+        binary = [int(bit) for bit in bin(number)[2:].zfill(8)]
+        for i in range(8):
+            GPIO.output(self.bits_gpio[i], binary[i])
+    
+    def sequential_counting_adc(self):
+        for number in range(256):
+            self.number_to_dac(number)
+            time.sleep(self.compare_time)
+            
+            if GPIO.input(self.comp_gpio) == GPIO.HIGH:
+                return number
+        return 255
+    
+    def get_sc_voltage(self):
+        value = self.sequential_counting_adc()
+        voltage = (value / 256) * self.dynamic_range
+        if self.verbose:
+            print(f"Напряжение: {voltage:.3f}В")
+        return voltage
 
-    plt.title("Зависимость напряжения от времени", fontsize = 16, fontweight = "bold")
-    plt.xlabel("Период измерения, с", fontsize = 12)
-    plt.ylabel("Количество измерений", fontsize = 12)
-
-    plt.xlim(0, max(sampling_periods))
-    plt.show()
+if __name__ == "__main__":
+    try:
+        adc = R2R_ADC(3.3, verbose=True)
+        
+        while True:
+            adc.get_sc_voltage()
+            time.sleep(0.5)
+    finally:
+        adc.deinit()
